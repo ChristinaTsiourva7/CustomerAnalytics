@@ -1,0 +1,67 @@
+packages_to_install <- c(
+  "readxl",
+  "polyglotr",
+  "dplyr",
+  "readr",
+  "tm",
+  "stm",
+  "stargazer",
+  "wordcloud",
+  "tidyr",
+  "ggplot2",
+  "tidyverse",
+  "cluster",
+  "ggfortify",
+  "gridExtra",
+  "reshape2"
+)
+install.packages(packages_to_install)
+for (pkg in packages_to_install) {
+  require(pkg, character.only = TRUE)
+}
+
+#
+### Step 1. Import the data, translate to English, combine files, and modify variables #################################################
+# Specify the file name
+excel_file <- "amazon_reviews1.xlsx"
+
+sheet_names <- excel_sheets(excel_file)
+
+all_data <- lapply(sheet_names, function(sheet) {
+  read_excel(excel_file, sheet = sheet)
+})
+
+names(all_data) <- sheet_names
+
+k <- 6
+mydata <- all_data[[k]]
+
+unique_titles <- unique(mydata$`Product title`)
+i <-0
+for (name in unique_titles) {
+  i <- i + 1
+  tmp <- subset(mydata, `Product title` == name)
+  
+  # Save CSV file with all data
+  fn_all <- paste0('myreview_all_', i, ".csv")
+  write.csv2(tmp, fn_all, row.names = FALSE) # use ";" for separator
+  
+  # Remove duplicate rows based on ratings, text, and date columns
+  tmp_unique <- tmp[!duplicated(tmp[c("Rating", "Text", "Date")]), ]
+  
+  # Save CSV file without duplicates
+  fn_unique <- paste0('myreview_unique_', i, ".csv")
+  write.csv2(tmp_unique, fn_unique, row.names = FALSE) # use ";" for separator
+  
+  # Translate the CSV file without duplicates
+  translate_file(fn_unique, source_language = "de", target_language = "en")
+  
+  print(paste("Processing iteration:", i))
+}
+
+######
+[1] "Processing iteration: 54"
+Error in curl::curl_fetch_memory(url, handle = handle) : 
+  URL rejected: Malformed input to a URL function
+
+
